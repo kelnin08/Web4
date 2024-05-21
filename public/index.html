@@ -1,0 +1,139 @@
+<!DOCTYPE html>
+<html lang="zh-TW">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>物價追蹤網站</title>
+  <style>
+    body {
+      font-family: Arial, sans-serif;
+      margin: 0;
+      padding: 0;
+      display: flex;
+      justify-content: center;
+      align-items: center;
+      height: 100vh;
+      background-color: #f0f0f0;
+    }
+
+    .container {
+      background: #fff;
+      padding: 20px;
+      border-radius: 8px;
+      box-shadow: 0 0 10px rgba(0, 0, 0, 0.1);
+      width: 80%;
+      max-width: 600px;
+    }
+
+    h1 {
+      text-align: center;
+      margin-bottom: 20px;
+    }
+
+    form {
+      display: grid;
+      grid-gap: 10px;
+      margin-bottom: 20px;
+    }
+
+    form div {
+      display: flex;
+      justify-content: space-between;
+    }
+
+    table {
+      width: 100%;
+      border-collapse: collapse;
+    }
+
+    table, th, td {
+      border: 1px solid #ddd;
+    }
+
+    th, td {
+      padding: 8px;
+      text-align: left;
+    }
+
+    thead {
+      background-color: #f2f2f2;
+    }
+  </style>
+</head>
+<body>
+<div class="container">
+  <h1>物價追蹤網站</h1>
+  <form id="price-form">
+    <div>
+      <label for="date">月份:</label>
+      <input type="month" id="date" required>
+    </div>
+    <div>
+      <label for="name">商品名稱:</label>
+      <input type="text" id="name" value="木瓜" required>
+    </div>
+    <button type="submit">提交</button>
+  </form>
+  <table id="price-list">
+    <thead>
+    <tr>
+      <th>月份</th>
+      <th>商品名稱</th>
+      <th>價格</th>
+    </tr>
+    </thead>
+    <tbody>
+    <!-- 動態生成的價格列表 -->
+    </tbody>
+  </table>
+</div>
+<script>
+  document.addEventListener('DOMContentLoaded', () => {
+    const form = document.getElementById('price-form');
+    const priceList = document.getElementById('price-list').getElementsByTagName('tbody')[0];
+
+    const API_URL = 'http://localhost:5000/api/prices';
+
+    form.addEventListener('submit', async (e) => {
+      e.preventDefault();
+
+      const date = document.getElementById('date').value;
+      const name = document.getElementById('name').value;
+
+      const response = await fetch(API_URL, {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+        },
+        body: JSON.stringify({ date, name }),
+      });
+
+      const newPrice = await response.json();
+      addPriceToTable(newPrice);
+
+      form.reset();
+      document.getElementById('name').value = '木瓜'; // 重置商品名稱為“木瓜”
+    });
+
+    async function loadPrices() {
+      const response = await fetch(API_URL);
+      const prices = await response.json();
+      prices.forEach(addPriceToTable);
+    }
+
+    function addPriceToTable(price) {
+      const row = priceList.insertRow();
+      const dateCell = row.insertCell(0);
+      const nameCell = row.insertCell(1);
+      const priceCell = row.insertCell(2);
+
+      dateCell.textContent = price.date;
+      nameCell.textContent = price.name;
+      priceCell.textContent = price.price;
+    }
+
+    loadPrices();
+  });
+</script>
+</body>
+</html>
